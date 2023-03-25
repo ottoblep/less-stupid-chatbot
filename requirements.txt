@@ -2,3 +2,4 @@ transformers
 SpeechRecognition
 vosk
 pyaudio
+torch

@@ -6,7 +6,10 @@ import json
 import threading
 import queue
 import speech_recognition as sr 
+import torch
+from pathlib import Path
 from vosk import Model, KaldiRecognizer # STT
+
 
 def SpeechToTextLoop(sentence_queue: queue.LifoQueue):
     """ Concurrent listening loop fills a queue """
@@ -28,20 +31,35 @@ def SpeechToTextLoop(sentence_queue: queue.LifoQueue):
                 print("Queue is full. Input was discarded.")
 
 
+def TextToSpeech(tts_model, text):
+    output_file = Path(f'outputs/response.wav')
+    prosody = '<prosody rate="{}" pitch="{}">'.format('medium', 'medium')
+    silero_input = f'<speak>{prosody}{text}</prosody></speak>'
+    tts_model.save_wav(ssml_text=silero_input, speaker='en_97', sample_rate=48000, audio_path=str(output_file))
+    os.system("vlc -I dummy --dummy-quiet ./outputs/response.wav vlc://quit")
+
+
+def LoadModels():
+    tts_model, example_text = torch.hub.load(repo_or_dir='snakers4/silero-models', model='silero_tts', language='en', speaker='v3_en')
+    tts_model.to('cpu')
+    return tts_model
+
+
 def Main():
     query_queue = queue.LifoQueue(maxsize=3)
+    tts_model = LoadModels()
     STTthread = threading.Thread(target=SpeechToTextLoop, args=(query_queue,))
     STTthread.start()
-
-    print(query_queue)
 
     while True:
         print(query_queue)
         input_sentence = query_queue.get(block=True, timeout=None) # waits forever if necessary
-        if contains(input_sentence,'shutdown'):
+        if 'shutdown' in input_sentence:
             STTthread.stop()
             print("shutting down")
+            STTthread.join()
             break
+        TextToSpeech(tts_model, input_sentence)
 
         #print("processing:", input_sentence)
 
@@ -53,7 +71,6 @@ def Main():
         #start_time = time.time()
         #TextToSpeech(response_sentence)
         #print("output processing time:", time.time() - start_time)
-
 
 if __name__ == "__main__":
     Main() 
