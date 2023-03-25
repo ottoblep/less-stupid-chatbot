@@ -11,12 +11,31 @@ from pathlib import Path
 from vosk import Model, KaldiRecognizer # STT
 import webui_api
 
+table = str.maketrans({
+    "<": "&lt;",
+    ">": "&gt;",
+    "&": "&amp;",
+    "'": "&apos;",
+    '"': "&quot;",
+})
 
-def SpeechToTextLoop(sentence_queue: queue.LifoQueue):
-    """ Concurrent listening loop fills a queue """
-    model = Model("vosk-model-small")
-    rec = KaldiRecognizer(model, 44100)
-    p = pyaudio.PyAudio()
+
+def xmlesc(txt):
+    return txt.translate(table)
+
+
+def InitSTT():
+    stt_params = []
+    stt_params.append(Model("vosk-model-small"))
+    stt_params.append(KaldiRecognizer(stt_params[0], 44100))
+    stt_params.append(pyaudio.PyAudio())
+    return stt_params
+
+
+def SpeechToText(stt_params):
+    model = stt_params[0]
+    rec = stt_params[1]
+    p = stt_params[2]
     stream = p.open(format=pyaudio.paInt16, channels=1, rate=44100, input=True, frames_per_buffer=22050)
     stream.start_stream()
     while True:
@@ -25,11 +44,7 @@ def SpeechToTextLoop(sentence_queue: queue.LifoQueue):
         if rec.AcceptWaveform(data):
             res = json.loads(rec.Result())
             if len(res['text'])==0: continue
-            try: 
-                sentence_queue.put(res['text'], block=False, timeout=None)
-                print("Added to queue:",res['text'])
-            except queue.Full:
-                print("Queue is full. Input was discarded.")
+            return res['text']
 
 
 def LoadModels():
@@ -43,39 +58,34 @@ def TextToSpeech(text):
     global tts_model
     output_file = Path(f'outputs/response.wav')
     prosody = '<prosody rate="{}" pitch="{}">'.format('medium', 'medium')
-    silero_input = f'<speak>{prosody}{text}</prosody></speak>'
-    tts_model.save_wav(ssml_text=silero_input, speaker='en_97', sample_rate=48000, audio_path=str(output_file))
+    silero_input = f'<speak>{prosody}{xmlesc(text)}</prosody></speak>'
+    tts_model.save_wav(ssml_text=silero_input, speaker='en_106', sample_rate=48000, audio_path=str(output_file))
     os.system("vlc -I dummy --dummy-quiet ./outputs/response.wav vlc://quit")
     tts_model = LoadModels()
 
 
 def Main():
     query_queue = queue.LifoQueue(maxsize=3)
-    STTthread = threading.Thread(target=SpeechToTextLoop, args=(query_queue,))
-    STTthread.start()
+    stt_params = InitSTT()
 
-    with open("startertext1.txt", "r") as file:
+    with open("startertext2.txt", "r") as file:
         startertext = file.read()
     history = startertext + "\n"
-    name1 = "You: "
-    name2 = "Bot: "
+    name1 = "You:"
+    name2 = "Hel:"
 
     while True:
-        input_sentence = query_queue.get(block=True, timeout=None) # waits forever if necessary
+        input_sentence = SpeechToText(stt_params) + "."
+        print("Processing "+input_sentence)
         if 'reset' in input_sentence:
             history = startertext + "\n"
             print("Reset history!")
+            TextToSpeech("Reset conversation.")
             continue
 
-        print("processing:", input_sentence)
-        start_time = time.time()
         response_sentence, history = webui_api.Chatbot(input_sentence, history, name1, name2)
-        print("response generation time:", time.time() - start_time)
-        print("response is:", response_sentence)
-
-        start_time = time.time()
+        #print("Responding "+response_sentence)
         TextToSpeech(response_sentence)
-        print("output processing time:", time.time() - start_time)
 
 if __name__ == "__main__":
     Main() 
