@@ -1,5 +1,4 @@
 transformers
-gTTS
 SpeechRecognition
 vosk
 pyaudio
