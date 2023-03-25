@@ -9,6 +9,7 @@ import speech_recognition as sr
 import torch
 from pathlib import Path
 from vosk import Model, KaldiRecognizer # STT
+import webui_api
 
 
 def SpeechToTextLoop(sentence_queue: queue.LifoQueue):
@@ -53,25 +54,28 @@ def Main():
     STTthread = threading.Thread(target=SpeechToTextLoop, args=(query_queue,))
     STTthread.start()
 
+    with open("startertext1.txt", "r") as file:
+        startertext = file.read()
+    history = startertext + "\n"
+    name1 = "You: "
+    name2 = "Bot: "
+
     while True:
         input_sentence = query_queue.get(block=True, timeout=None) # waits forever if necessary
-        if 'shutdown' in input_sentence:
-            STTthread.stop()
-            print("shutting down")
-            STTthread.join()
-            break
-        TextToSpeech(input_sentence)
+        if 'reset' in input_sentence:
+            history = startertext + "\n"
+            print("Reset history!")
+            continue
 
-        #print("processing:", input_sentence)
+        print("processing:", input_sentence)
+        start_time = time.time()
+        response_sentence, history = webui_api.Chatbot(input_sentence, history, name1, name2)
+        print("response generation time:", time.time() - start_time)
+        print("response is:", response_sentence)
 
-        #start_time = time.time()
-        #response_sentence = PromptWebuiAPI(input_sentence)
-        #print("response generation time:", time.time() - start_time)
-        #print("response is:", response_sentence)
-
-        #start_time = time.time()
-        #TextToSpeech(response_sentence)
-        #print("output processing time:", time.time() - start_time)
+        start_time = time.time()
+        TextToSpeech(response_sentence)
+        print("output processing time:", time.time() - start_time)
 
 if __name__ == "__main__":
     Main() 
