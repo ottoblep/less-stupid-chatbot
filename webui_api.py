@@ -98,21 +98,20 @@ async def Chatbot(query_queue, response_queue, name1, name2, startertext):
             print("Registered Reset")
             history = startertext + "\n" # Reset 
             await response_queue.put("Reset history!")
-            response_queue.task_done()
-            continue
-        print("Processing input:", prompt)
-        history += name1 + prompt + "\n";
-        history += name2
-        output_buffer = ""
-        ignore_first = True
-        async for response in run(history):
-            if ignore_first: 
-                ignore_first = False
-                continue
-            output_buffer = output_buffer + response
-            if '.' in output_buffer or '?' in output_buffer or '!' in output_buffer:
-                await response_queue.put(output_buffer)
-                history = history + output_buffer
-                print("Appended Sentence to outputs: ", output_buffer)
-                output_buffer = ""
+        else:
+            print("Processing input:", prompt)
+            history += name1 + prompt + "\n";
+            history += name2
+            output_buffer = ""
+            ignore_first = True
+            async for response in run(history):
+                if ignore_first: 
+                    ignore_first = False
+                    continue
+                output_buffer = output_buffer + response
+                if '.' in output_buffer or '?' in output_buffer or '!' in output_buffer:
+                    await response_queue.put(output_buffer)
+                    history = history + output_buffer
+                    print("Appended Sentence to outputs: ", output_buffer)
+                    output_buffer = ""
         query_queue.task_done()
