@@ -59,7 +59,7 @@ def TextToSpeech(text):
     output_file = Path(f'outputs/response.wav')
     prosody = '<prosody rate="{}" pitch="{}">'.format('medium', 'medium')
     silero_input = f'<speak>{prosody}{xmlesc(text)}</prosody></speak>'
-    tts_model.save_wav(ssml_text=silero_input, speaker='en_106', sample_rate=48000, audio_path=str(output_file))
+    tts_model.save_wav(ssml_text=silero_input, speaker='en_99', sample_rate=48000, audio_path=str(output_file))
     os.system("vlc -I dummy --dummy-quiet ./outputs/response.wav vlc://quit")
     tts_model = LoadModels()
 
@@ -68,11 +68,11 @@ def Main():
     query_queue = queue.LifoQueue(maxsize=3)
     stt_params = InitSTT()
 
-    with open("startertext2.txt", "r") as file:
+    with open("startertext_llama2.txt", "r") as file:
         startertext = file.read()
     history = startertext + "\n"
-    name1 = "You:"
-    name2 = "Hel:"
+    name1 = "User:"
+    name2 = "Assistant:"
 
     while True:
         input_sentence = SpeechToText(stt_params) + "."
