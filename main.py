@@ -10,6 +10,7 @@ import torch
 from pathlib import Path
 from vosk import Model, KaldiRecognizer # STT
 import webui_api
+import asyncio
 
 table = str.maketrans({
     "<": "&lt;",
@@ -64,28 +65,42 @@ def TextToSpeech(text):
     tts_model = LoadModels()
 
 
-def Main():
-    query_queue = queue.LifoQueue(maxsize=3)
+async def TTSAgent(response_queue):
+    while True:
+        print("TTSAgent Waiting for Responses")
+        sentence = await response_queue.get()
+        print("Producing Speech")
+        TextToSpeech(sentence)
+        response_queue.task_done()
+
+
+async def STTAgent(query_queue, response_queue, stt_params):
+    while True:
+        print("Starting listening")
+        input_sentence = SpeechToText(stt_params) + "."
+        await query_queue.put(input_sentence)
+        await query_queue.join()
+        await response_queue.join()
+
+
+async def Main():
+    query_queue = asyncio.Queue(maxsize=3)
+    response_queue = asyncio.Queue(maxsize=20)
     stt_params = InitSTT()
 
     with open("startertext_llama2.txt", "r") as file:
         startertext = file.read()
-    history = startertext + "\n"
     name1 = "User:"
     name2 = "Assistant:"
 
-    while True:
-        input_sentence = SpeechToText(stt_params) + "."
-        print("Processing "+input_sentence)
-        if 'reset' in input_sentence:
-            history = startertext + "\n"
-            print("Reset history!")
-            TextToSpeech("Reset conversation.")
-            continue
+    
+    asyncio.create_task(TTSAgent(response_queue))
+    asyncio.create_task(webui_api.Chatbot(query_queue,response_queue, name1, name2, startertext))
+    asyncio.create_task(STTAgent(query_queue,response_queue,stt_params))
 
-        response_sentence, history = webui_api.Chatbot(input_sentence, history, name1, name2)
-        #print("Responding "+response_sentence)
-        TextToSpeech(response_sentence)
+    while True:
+        await asyncio.sleep(2)
+
 
 if __name__ == "__main__":
-    Main() 
+    asyncio.run(Main())
