@@ -2,6 +2,9 @@ import requests
 import json
 import re
 
+HOST = 'localhost:5000'
+URI = f'http://{HOST}/api/v1/generate'
+
 def TruncateAnswer(response, name1, name2):
     truncated = response[0:response.find(name1)].replace('\n','')
     truncated = truncated.replace(name2, '')
@@ -23,11 +26,20 @@ def Chatbot(prompt, history, name1, name2):
 
 
 def Query(history):
-    #print("PROMPT\n", history + "\nEND PROMPT")
-    response = requests.post("http://127.0.0.1:7860/run/textgen", json={
-    	"data": [
-    		history, 100, True, 0.5, 0.9, 1, 1.1, 1, 0, 0, 0, 1, 0,
-    		1, False, -1,
-        ]
-    }).json()
-    return response["data"][0]
+    print(history)
+    request = {
+        'prompt': history,
+        'max_new_tokens': 250,
+        # Generation params. If 'preset' is set to different than 'None', the values
+        # in presets/preset-name.yaml are used instead of the individual numbers.
+        'preset': 'Divine Intellect',
+    }
+
+    response = requests.post(URI, json=request)
+
+    if response.status_code == 200:
+        result = response.json()['results'][0]['text']
+    else:
+        print("ERROR: ", response)
+
+    return result 
