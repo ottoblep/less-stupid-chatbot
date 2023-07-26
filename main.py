@@ -60,7 +60,7 @@ def TextToSpeech(text):
     output_file = Path(f'outputs/response.wav')
     prosody = '<prosody rate="{}" pitch="{}">'.format('medium', 'medium')
     silero_input = f'<speak>{prosody}{xmlesc(text)}</prosody></speak>'
-    tts_model.save_wav(ssml_text=silero_input, speaker='en_99', sample_rate=48000, audio_path=str(output_file))
+    tts_model.save_wav(ssml_text=silero_input, speaker='en_99', sample_rate=48000, audio_path=str(output_file)) # 99 25 38 103
     os.system("vlc -I dummy --dummy-quiet ./outputs/response.wav vlc://quit")
 
 async def TTSAgent(response_queue):
@@ -75,6 +75,7 @@ async def TTSAgent(response_queue):
 async def STTAgent(query_queue, response_queue, stt_params):
     while True:
         print("Starting listening")
+        os.system("vlc -I dummy --dummy-quiet ./sounds/button-41.mp3 vlc://quit")
         input_sentence = SpeechToText(stt_params) + "."
         await query_queue.put(input_sentence)
         await query_queue.join()
