@@ -89,19 +89,22 @@ async def run(context):
                     return
 
 
-async def Chatbot(query_queue, response_queue, name1, name2, startertext):
-    history = startertext + "\n"
+async def Chatbot(query_queue, response_queue, system_prompt):
+    initial_prompt = "[INST] «SYS»\n" + system_prompt + "\n«/SYS»\n" # Reset 
+    history = initial_prompt
     print("Chatbot starting")
     while True:
         prompt = await query_queue.get()
         if 'reset' in prompt:
             print("Registered Reset")
-            history = startertext + "\n" # Reset 
+            history = initial_prompt # Reset
             await response_queue.put("Reset history!")
         else:
             print("Processing input:", prompt)
-            history += name1 + prompt + "\n";
-            history += name2
+            if history == initial_prompt:
+                history += prompt + " [\INST] ";
+            else:
+                history += "[INST] "+ prompt + " [\INST] ";
             output_buffer = ""
             ignore_first = True
             async for response in run(history):
@@ -114,4 +117,5 @@ async def Chatbot(query_queue, response_queue, name1, name2, startertext):
                     history = history + output_buffer
                     print("Appended Sentence to outputs: ", output_buffer)
                     output_buffer = ""
+        history = history + "\n"
         query_queue.task_done()

@@ -87,14 +87,11 @@ async def Main():
     response_queue = asyncio.Queue(maxsize=20)
     stt_params = InitSTT()
 
-    with open("startertext_llama2.txt", "r") as file:
-        startertext = file.read()
-    name1 = "User:"
-    name2 = "Assistant:"
-
+    with open("system_prompt.txt", "r") as file:
+        system_prompt = file.read()
     
     asyncio.create_task(TTSAgent(response_queue))
-    asyncio.create_task(webui_api.Chatbot(query_queue,response_queue, name1, name2, startertext))
+    asyncio.create_task(webui_api.Chatbot(query_queue,response_queue, system_prompt))
     asyncio.create_task(STTAgent(query_queue,response_queue,stt_params))
 
     while True:
