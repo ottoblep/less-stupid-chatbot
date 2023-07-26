@@ -62,8 +62,6 @@ def TextToSpeech(text):
     silero_input = f'<speak>{prosody}{xmlesc(text)}</prosody></speak>'
     tts_model.save_wav(ssml_text=silero_input, speaker='en_99', sample_rate=48000, audio_path=str(output_file))
     os.system("vlc -I dummy --dummy-quiet ./outputs/response.wav vlc://quit")
-    tts_model = LoadModels()
-
 
 async def TTSAgent(response_queue):
     while True:
