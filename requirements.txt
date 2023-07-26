@@ -1,5 +1,7 @@
-transformers
+PyAudio
+Requests
 SpeechRecognition
-vosk
-pyaudio
 torch
+torch
+vosk
+websockets
