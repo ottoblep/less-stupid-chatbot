@@ -11,6 +11,7 @@ from pathlib import Path
 from vosk import Model, KaldiRecognizer # STT
 import webui_api
 import asyncio
+import pyttsx3
 
 table = str.maketrans({
     "<": "&lt;",
@@ -19,6 +20,8 @@ table = str.maketrans({
     "'": "&apos;",
     '"': "&quot;",
 })
+
+tts_model = pyttsx3.init()
 
 
 def xmlesc(txt):
@@ -48,20 +51,11 @@ def SpeechToText(stt_params):
             return res['text']
 
 
-def LoadModels():
-    tts_model, example_text = torch.hub.load(repo_or_dir='snakers4/silero-models', model='silero_tts', language='en', speaker='v3_en')
-    tts_model.to('cpu')
-    return tts_model
-tts_model = LoadModels()
-
-
 def TextToSpeech(text):
     global tts_model
-    output_file = Path(f'outputs/response.wav')
-    prosody = '<prosody rate="{}" pitch="{}">'.format('medium', 'medium')
-    silero_input = f'<speak>{prosody}{xmlesc(text)}</prosody></speak>'
-    tts_model.save_wav(ssml_text=silero_input, speaker='en_103', sample_rate=24000, audio_path=str(output_file)) # 99 25 38 103
-    os.system("vlc -I dummy --dummy-quiet ./outputs/response.wav vlc://quit")
+    tts_model.say(text)
+    tts_model.runAndWait()
+
 
 async def TTSAgent(response_queue):
     while True:
