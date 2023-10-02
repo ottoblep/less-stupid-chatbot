@@ -82,8 +82,6 @@ async def Chatbot(query_queue, response_queue, system_prompt):
                     continue
                 response = filter_characters(response)
                 output_buffer = output_buffer + response
-                if "lighton" in output_buffer.lower(): functions.light_on()
-                if "lightoff" in output_buffer.lower(): functions.light_off()
                 if '. ' in output_buffer or '? ' in output_buffer or '! ' in output_buffer:
                     splits = [ output_buffer.find('? '),  output_buffer.find('! '),  output_buffer.find('. ')]
                     splits = [i for i in splits if i > 0]
@@ -91,6 +89,8 @@ async def Chatbot(query_queue, response_queue, system_prompt):
                     sentence = output_buffer[:split]
                     output_buffer = output_buffer[split+1:]
                     await response_queue.put(sentence)
+                    if "lighton" in sentence.lower(): functions.light_on()
+                    if "lightoff" in sentence.lower(): functions.light_off()
                     history = history + sentence
                     print("Appended Sentence to outputs: ", sentence)
         history = history + "\n"
