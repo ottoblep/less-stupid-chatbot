@@ -5,8 +5,6 @@ import pyaudio
 import json
 import threading
 import queue
-import speech_recognition as sr 
-import torch
 from pathlib import Path
 from vosk import Model, KaldiRecognizer # STT
 import webui_api

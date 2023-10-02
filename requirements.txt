@@ -1,8 +1,5 @@
 PyAudio
 Requests
-SpeechRecognition
-torch
-torch
 vosk
 websockets
 OmegaConf
