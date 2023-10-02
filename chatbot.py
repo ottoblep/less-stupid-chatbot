@@ -2,6 +2,7 @@ import asyncio
 import json
 import sys
 import functions
+import re
 
 try:
     import websockets
@@ -64,7 +65,7 @@ async def Chatbot(query_queue, response_queue, system_prompt):
         else:
             print("Processing input:", prompt)
             # Add information to prompt if necessary
-            if "time" in prompt or "day" in prompt or "date" in prompt:
+            if any(re.findall(r'time|day|date|hour|second|minute',prompt, re.IGNORECASE)):
                 additional_info = "The current time and date is " + functions.get_time()
                 prompt += ". " + additional_info
                 print("Adding information:" + additional_info)
