@@ -7,7 +7,7 @@ import threading
 import queue
 from pathlib import Path
 from vosk import Model, KaldiRecognizer # STT
-import webui_api
+import chatbot
 import asyncio
 import pyttsx3
 from dotenv import load_dotenv
@@ -85,7 +85,7 @@ async def Main():
         system_prompt = file.read()
     
     asyncio.create_task(TTSAgent(response_queue))
-    asyncio.create_task(webui_api.Chatbot(query_queue,response_queue, system_prompt))
+    asyncio.create_task(chatbot.Chatbot(query_queue,response_queue, system_prompt))
     asyncio.create_task(STTAgent(query_queue,response_queue,stt_params))
 
     while True:

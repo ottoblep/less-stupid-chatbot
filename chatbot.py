@@ -56,6 +56,11 @@ async def Chatbot(query_queue, response_queue, system_prompt):
             print("Registered Reset")
             history = initial_prompt # Reset
             await response_queue.put("Reset history!")
+        elif 'shut off' in prompt:
+            print("Shutting down.")
+            history = initial_prompt # Reset
+            await response_queue.put("Shutting Down!")
+            sys.exit()
         else:
             print("Processing input:", prompt)
             # Add information to prompt if necessary
