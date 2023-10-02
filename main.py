@@ -60,7 +60,7 @@ def TextToSpeech(text):
     output_file = Path(f'outputs/response.wav')
     prosody = '<prosody rate="{}" pitch="{}">'.format('medium', 'medium')
     silero_input = f'<speak>{prosody}{xmlesc(text)}</prosody></speak>'
-    tts_model.save_wav(ssml_text=silero_input, speaker='en_99', sample_rate=48000, audio_path=str(output_file)) # 99 25 38 103
+    tts_model.save_wav(ssml_text=silero_input, speaker='en_103', sample_rate=24000, audio_path=str(output_file)) # 99 25 38 103
     os.system("vlc -I dummy --dummy-quiet ./outputs/response.wav vlc://quit")
 
 async def TTSAgent(response_queue):
@@ -87,7 +87,7 @@ async def Main():
     response_queue = asyncio.Queue(maxsize=20)
     stt_params = InitSTT()
 
-    with open("system_prompt.txt", "r") as file:
+    with open("marvin_prompt.txt", "r") as file:
         system_prompt = file.read()
     
     asyncio.create_task(TTSAgent(response_queue))
