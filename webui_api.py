@@ -24,6 +24,7 @@ async def run(context):
         # Generation params. If 'preset' is set to different than 'None', the values
         # in presets/preset-name.yaml are used instead of the individual numbers.
         'preset': 'Divine Intellect',
+        'stopping_strings': [ "[", "]"]
     }
 
     async with websockets.connect(URI, ping_interval=None) as websocket:
