@@ -1,5 +1,8 @@
 *.mp3
 vosk-model-*
+__pycache__
+sounds
 outputs
 venv
 .env
+.vscode
