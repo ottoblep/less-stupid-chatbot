@@ -15,6 +15,8 @@ URI = f'ws://{HOST}/api/v1/stream'
 # For reverse-proxied streaming, the remote will likely host with ssl - wss://
 # URI = 'wss://your-uri-here.trycloudflare.com/api/v1/stream'
 
+def filter_characters(input):
+    return input.replace("*", "")
 
 async def run(context):
     # Note: the selected defaults change from time to time.
@@ -72,13 +74,18 @@ async def Chatbot(query_queue, response_queue, system_prompt):
                 if ignore_first: 
                     ignore_first = False
                     continue
+                response = filter_characters(response)
                 output_buffer = output_buffer + response
                 if "lighton" in output_buffer.lower(): functions.light_on()
                 if "lightoff" in output_buffer.lower(): functions.light_off()
-                if '.' in output_buffer or '?' in output_buffer or '!' in output_buffer:
-                    await response_queue.put(output_buffer)
-                    history = history + output_buffer
-                    print("Appended Sentence to outputs: ", output_buffer)
-                    output_buffer = ""
+                if '. ' in output_buffer or '? ' in output_buffer or '! ' in output_buffer:
+                    splits = [ output_buffer.find('? '),  output_buffer.find('! '),  output_buffer.find('. ')]
+                    splits = [i for i in splits if i > 0]
+                    split = min(splits)+1
+                    sentence = output_buffer[:split]
+                    output_buffer = output_buffer[split+1:]
+                    await response_queue.put(sentence)
+                    history = history + sentence
+                    print("Appended Sentence to outputs: ", sentence)
         history = history + "\n"
         query_queue.task_done()
