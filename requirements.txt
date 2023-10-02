@@ -3,3 +3,4 @@ Requests
 vosk
 websockets
 OmegaConf
+python-dotenv

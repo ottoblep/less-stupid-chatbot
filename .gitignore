@@ -2,3 +2,4 @@
 vosk-model-*
 outputs
 venv
+.env

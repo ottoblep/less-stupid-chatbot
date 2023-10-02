@@ -1,6 +1,7 @@
 import asyncio
 import json
 import sys
+import functions
 
 try:
     import websockets
@@ -55,6 +56,12 @@ async def Chatbot(query_queue, response_queue, system_prompt):
             await response_queue.put("Reset history!")
         else:
             print("Processing input:", prompt)
+            # Add information to prompt if necessary
+            if "time" in prompt or "day" in prompt or "date" in prompt:
+                additional_info = "The current time and date is " + functions.get_time()
+                prompt += ". " + additional_info
+                print("Adding information:" + additional_info)
+
             if history == initial_prompt:
                 history += prompt + " [\INST] ";
             else:
@@ -66,6 +73,8 @@ async def Chatbot(query_queue, response_queue, system_prompt):
                     ignore_first = False
                     continue
                 output_buffer = output_buffer + response
+                if "lighton" in output_buffer.lower(): functions.light_on()
+                if "lightoff" in output_buffer.lower(): functions.light_off()
                 if '.' in output_buffer or '?' in output_buffer or '!' in output_buffer:
                     await response_queue.put(output_buffer)
                     history = history + output_buffer

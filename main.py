@@ -10,6 +10,7 @@ from vosk import Model, KaldiRecognizer # STT
 import webui_api
 import asyncio
 import pyttsx3
+from dotenv import load_dotenv
 
 table = str.maketrans({
     "<": "&lt;",
@@ -20,7 +21,7 @@ table = str.maketrans({
 })
 
 tts_model = pyttsx3.init()
-
+load_dotenv()
 
 def xmlesc(txt):
     return txt.translate(table)
@@ -65,9 +66,10 @@ async def TTSAgent(response_queue):
 
 
 async def STTAgent(query_queue, response_queue, stt_params):
+    READY_SOUND_PATH = os.getenv('READY_SOUND_PATH')
     while True:
         print("Starting listening")
-        os.system("vlc -I dummy --dummy-quiet ./sounds/button-41.mp3 vlc://quit")
+        os.system("vlc -I dummy --dummy-quiet " + READY_SOUND_PATH + " vlc://quit")
         input_sentence = SpeechToText(stt_params) + "."
         await query_queue.put(input_sentence)
         await query_queue.join()
