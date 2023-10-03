@@ -1,6 +1,7 @@
 import asyncio
 import json
 import sys
+import os
 
 try:
     import websockets
@@ -8,8 +9,10 @@ except ImportError:
     print("Websockets package not found. Make sure it's installed.")
 
 # For local streaming, the websockets are hosted without ssl - ws://
-HOST = 'localhost:5005'
-URI = f'ws://{HOST}/api/v1/stream'
+# HOST = 'localhost:5005'
+# URI = f'ws://{HOST}/api/v1/stream'
+HOST = os.getenv("WEBUI_HOST")
+URI = os.getenv("WEBUI_URI")
 
 # For reverse-proxied streaming, the remote will likely host with ssl - wss://
 # URI = 'wss://your-uri-here.trycloudflare.com/api/v1/stream'
