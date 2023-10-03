@@ -64,16 +64,18 @@ async def Chatbot(query_queue, response_queue, system_prompt):
             sys.exit()
         else:
             print("Processing input:", prompt)
+
             # Add information to prompt if necessary
+            additional_info = ""
             if any(re.findall(r'time|day|date|hour|second|minute',prompt, re.IGNORECASE)):
-                additional_info = "The current time and date is " + functions.get_time()
-                prompt += ". " + additional_info
+                additional_info = ". The current time and date is " + functions.get_time()
                 print("Adding information:" + additional_info)
 
             if history == initial_prompt:
-                history += prompt + " [\INST] ";
+                history += prompt + additional_info + " [\INST] ";
             else:
-                history += "[INST] "+ prompt + " [\INST] ";
+                history += "[INST] "+ prompt + additional_info + " [\INST] ";
+
             output_buffer = ""
             ignore_first = True
             async for response in run(history):
