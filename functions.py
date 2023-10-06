@@ -2,12 +2,21 @@ import os
 import socket
 import time
 import re
+import requests
 
 
 def context_adder(question):
-    additional_info = ""
-    if any(re.findall(r'clock|soon|late|time|day|date|hour|second|minute',question, re.IGNORECASE)):
-        additional_info = ". The current time and date is " + get_time()
+    additional_info = "\nAdditional background information: \n"
+    LOCATION = os.getenv("LOCATION")
+    # Add time
+    if any(re.findall(r'clock|soon|late|time|day|date|hour|week|second|minute',question, re.IGNORECASE)):
+        additional_info += ". The current time and date is " + get_time()
+    # Add weather
+    if any(re.findall(r'weather|rain|sun|clouds|mist|fog|warm|cold|clothes|hot|heat',question, re.IGNORECASE)):
+        print(LOCATION)
+        weather_format = "Conditions are %C. The temperature is %t. There will be %p of rain. The humidity is %h.\n"
+        weather = ". The current local weather is: " + requests.get("http://wttr.in/"+LOCATION+"?format=" + weather_format).text
+        additional_info += weather 
     print("Adding information:" + additional_info)
     return additional_info
 
