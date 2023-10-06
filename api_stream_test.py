@@ -22,7 +22,7 @@ async def run(context):
     # Note: the selected defaults change from time to time.
     request = {
         'prompt': context,
-        'max_new_tokens': 250,
+        'max_new_tokens': 100,
 
         # Generation params. If 'preset' is set to different than 'None', the values
         # in presets/preset-name.yaml are used instead of the individual numbers.
@@ -42,7 +42,7 @@ async def run(context):
         'no_repeat_ngram_size': 0,
         'num_beams': 1,
         'penalty_alpha': 0,
-        'length_penalty': 1,
+        'length_penalty': 5,
         'early_stopping': False,
         'mirostat_mode': 0,
         'mirostat_tau': 5,
@@ -50,7 +50,7 @@ async def run(context):
 
         'seed': -1,
         'add_bos_token': True,
-        'truncation_length': 2048,
+        'truncation_length': 4096,
         'ban_eos_token': False,
         'skip_special_tokens': True,
         'stopping_strings': []
