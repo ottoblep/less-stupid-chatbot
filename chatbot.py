@@ -46,9 +46,10 @@ async def run(context):
 
 
 async def Chatbot(query_queue, response_queue, system_prompt):
-    initial_prompt = "[INST] «SYS»\n" + system_prompt + "\n«/SYS»\n" # Reset 
+    initial_prompt = "[INST] «SYS»\n" + system_prompt + "\n" + functions.context_adder() + "\n«/SYS»\n" # Reset 
     history = initial_prompt
     print("Chatbot starting")
+    print(initial_prompt)
     while True:
         prompt = await query_queue.get()
         if 'reset' in prompt:
@@ -62,12 +63,11 @@ async def Chatbot(query_queue, response_queue, system_prompt):
             sys.exit()
         else:
             print("Processing input:", prompt)
-            additional_info = functions.context_adder(prompt)
 
             if history == initial_prompt:
-                history += prompt + additional_info + " [\INST] ";
+                history += prompt + " [\INST] ";
             else:
-                history += "[INST] "+ prompt + additional_info + " [\INST] ";
+                history += "[INST] "+ prompt + " [\INST] ";
 
             output_buffer = ""
             ignore_first = True
