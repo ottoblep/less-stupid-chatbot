@@ -52,6 +52,13 @@ async def Chatbot(query_queue, response_queue, system_prompt):
     print(initial_prompt)
     while True:
         prompt = await query_queue.get()
+        print("Waiting for start signal: ",prompt)
+        query_queue.task_done()
+        if "start" in prompt: 
+            await response_queue.put("Starting!")
+            break
+    while True:
+        prompt = await query_queue.get()
         if 'reset' in prompt:
             print("Registered Reset")
             history = initial_prompt # Reset
