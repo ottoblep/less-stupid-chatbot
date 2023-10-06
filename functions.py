@@ -4,14 +4,16 @@ import time
 import re
 import requests
 from bs4 import BeautifulSoup
+import random
 
 
 def context_adder():
-    additional_info = "Background Information: "
-    LOCATION = os.getenv("LOCATION")
+    # Add horoscope personality
+    additional_info = get_random_horoscope()
     # Add time
     additional_info += "The current time and date is " + get_time() + "."
     # Add weather
+    LOCATION = os.getenv("LOCATION")
     weather_format = "Conditions are %C. The temperature is %t. There will be %p of rain. The humidity is %h\n"
     weather = "The current local weather is: " + requests.get("http://wttr.in/"+LOCATION+"?format=" + weather_format).text + "."
     additional_info += weather 
@@ -62,3 +64,15 @@ def get_news_headlines(amount):
         if tag.has_attr("aria-label") and len(headlines)<=amount: 
             headlines.append(tag['aria-label'])
     return headlines
+
+
+def get_random_horoscope():
+    url = "https://cafeastrology.com/dailyhoroscopesall.html"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    box = soup.find_all("div", class_="content-box-green")
+    signs = box[0].contents
+    horoscopes = []
+    for hor in signs:
+        if len(hor.text) > 100: horoscopes.append(hor.text)
+    return random.choice(horoscopes)
