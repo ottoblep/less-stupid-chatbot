@@ -2,6 +2,7 @@ import json
 import sys
 import functions
 import requests
+import os
 
 def filter_characters(input):
     return input.replace("*", "")
@@ -10,7 +11,7 @@ def run(context):
     data = {
         "prompt": context,
         "n_predict": 128,
-        "stop": [".", "!", "?", "User:"]
+        "stop": [".", "!", "?", os.getenv("USER_NAME") + ":"]
     }
     headers = {
         "Authorization": "Bearer doesntmatter"
@@ -34,7 +35,7 @@ async def Chatbot(query_queue, response_queue, system_prompt):
             sys.exit()
         else:
             print("Processing input:", prompt)
-            history += "\nUser: " + prompt + "\nBot: ";
+            history += "\n" + os.getenv("USER_NAME") + ": " + prompt + "\n" + os.getenv("BOT_NAME") + ": ";
             response = run(history)
             await response_queue.put(response)
             history += response

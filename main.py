@@ -36,7 +36,7 @@ async def Main():
     query_queue = asyncio.Queue(maxsize=3)
     response_queue = asyncio.Queue(maxsize=20)
 
-    with open("marvin_prompt.txt", "r") as file:
+    with open(os.getenv("PROMPT_FILE"), "r") as file:
         system_prompt = file.read()
     
     asyncio.create_task(TTSAgent(response_queue))
