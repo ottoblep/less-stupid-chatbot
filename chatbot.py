@@ -1,62 +1,26 @@
 import json
 import sys
 import functions
-
-try:
-    import websockets
-except ImportError:
-    print("Websockets package not found. Make sure it's installed.")
-
-# For local streaming, the websockets are hosted without ssl - ws://
-HOST = 'localhost:5005'
-URI = f'ws://{HOST}/api/v1/stream'
-
-# For reverse-proxied streaming, the remote will likely host with ssl - wss://
-# URI = 'wss://your-uri-here.trycloudflare.com/api/v1/stream'
+import requests
 
 def filter_characters(input):
     return input.replace("*", "")
 
-async def run(context):
-    # Note: the selected defaults change from time to time.
-    request = {
-        'prompt': context,
-        'max_new_tokens': 250,
-
-        # Generation params. If 'preset' is set to different than 'None', the values
-        # in presets/preset-name.yaml are used instead of the individual numbers.
-        'preset': 'Divine Intellect',
-        'stopping_strings': [ "[", "]"]
+def run(context):
+    data = {
+        "prompt": context,
+        "n_predict": 128,
+        "stop": [".", "!", "?", "User:"]
     }
-
-    async with websockets.connect(URI, ping_interval=None) as websocket:
-        await websocket.send(json.dumps(request))
-
-        yield context  # Remove this if you just want to see the reply
-
-        while True:
-            incoming_data = await websocket.recv()
-            incoming_data = json.loads(incoming_data)
-
-            match incoming_data['event']:
-                case 'text_stream':
-                    yield incoming_data['text']
-                case 'stream_end':
-                    return
-
+    headers = {
+        "Authorization": "Bearer doesntmatter"
+    }
+    response = requests.post('http://localhost:8080/completion', headers=headers, json=data).json()
+    return response['content']
 
 async def Chatbot(query_queue, response_queue, system_prompt):
-    initial_prompt = "[INST] «SYS»\n" + system_prompt + "\n" + functions.context_adder() + "\n«/SYS»\n" # Reset 
-    history = initial_prompt
+    history = system_prompt + "\n" + functions.context_adder() + "\n" # Reset 
     print("Chatbot starting")
-    print(initial_prompt)
-    while True:
-        prompt = await query_queue.get()
-        print("Waiting for start signal: ",prompt)
-        query_queue.task_done()
-        if "start" in prompt: 
-            await response_queue.put("Starting!")
-            break
     while True:
         prompt = await query_queue.get()
         if 'reset' in prompt:
@@ -70,29 +34,9 @@ async def Chatbot(query_queue, response_queue, system_prompt):
             sys.exit()
         else:
             print("Processing input:", prompt)
-
-            if history == initial_prompt:
-                history += prompt + " [\INST] ";
-            else:
-                history += "[INST] "+ prompt + " [\INST] ";
-
-            output_buffer = ""
-            ignore_first = True
-            async for response in run(history):
-                if ignore_first: 
-                    ignore_first = False
-                    continue
-                response = filter_characters(response)
-                output_buffer = output_buffer + response
-                if '. ' in output_buffer or '? ' in output_buffer or '! ' in output_buffer:
-                    splits = [ output_buffer.find('? '),  output_buffer.find('! '),  output_buffer.find('. ')]
-                    splits = [i for i in splits if i > 0]
-                    split = min(splits)+1
-                    sentence = output_buffer[:split]
-                    output_buffer = output_buffer[split+1:]
-                    await response_queue.put(sentence)
-                    history = history + sentence
-                    print("Appended Sentence to outputs: ", sentence)
-                    functions.trigger(sentence)
-        history = history + "\n"
+            history += "\nUser: " + prompt + "\nBot: ";
+            response = run(history)
+            await response_queue.put(response)
+            history += response
+            print("Appended response to outputs: ", response)
         query_queue.task_done()

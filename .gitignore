@@ -1,5 +1,7 @@
-*.mp3
-vosk-model-*
+*.wav
+*.onnx
+*.json
+model*
 __pycache__
 sounds
 outputs
