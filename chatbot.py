@@ -11,7 +11,7 @@ def run(context):
     data = {
         "prompt": context,
         "n_predict": 128,
-        "stop": [".", "!", "?", os.getenv("USER_NAME") + ":"]
+        "temperature": 1.3,
     }
     headers = {
         "Authorization": "Bearer doesntmatter"
